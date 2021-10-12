@@ -15,22 +15,8 @@ var (
 	GitlabAddr   = os.Getenv("CI_API_V4_URL")
 )
 
-type GitlabData struct {
-	users []*gitlab.User
-}
-
 type App struct {
 	client *gitlab.Client
-	data   GitlabData
-}
-
-func (a *App) listUsers() {
-	users, _, err := a.client.Users.ListUsers(&gitlab.ListUsersOptions{})
-	if err != nil {
-		fmt.Println(err)
-	}
-	a.data.users = users
-
 }
 
 func (a *App) createTag(project string, ref string, tag string, msg string) {
