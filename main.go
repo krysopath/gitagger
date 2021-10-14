@@ -89,6 +89,38 @@ func (a *App) updateFile(project string, ref string, filename string, contentOrP
 	fmt.Println(val, resp)
 }
 
+func (a *App) createUpdateFile(project string, ref string, filename string, contentOrPath string) {
+	content := toContent(contentOrPath)
+	update := &gitlab.UpdateFileOptions{
+		Branch:        &ref,
+		AuthorName:    &Name,
+		AuthorEmail:   &Email,
+		Content:       &content,
+		CommitMessage: &Message,
+	}
+	val, resp, err := a.client.RepositoryFiles.UpdateFile(project, filename, update)
+	if err != nil {
+		if resp.Response.StatusCode == 400 {
+			create := &gitlab.CreateFileOptions{
+				Branch:        &ref,
+				AuthorName:    &Name,
+				AuthorEmail:   &Email,
+				Content:       &content,
+				CommitMessage: &Message,
+			}
+
+			_, _, err := a.client.RepositoryFiles.CreateFile(project, filename, create)
+			if err != nil {
+				log.Fatalf(err.Error())
+			}
+
+		} else {
+			log.Fatalf(err.Error())
+		}
+	}
+	fmt.Println(val, resp)
+}
+
 //Act decides the subcommand for the cli app
 func (a *App) Act() {
 	args := flag.Args()
@@ -130,6 +162,18 @@ func (a *App) Act() {
 				data := strings.Split(s, ":")
 				pid, ref, path, content := data[0], data[1], data[2], data[3]
 				a.updateFile(pid, ref, path, content)
+				fmt.Println(i, pid, ref, path, content)
+			}
+		} else {
+			fmt.Println("Help")
+			os.Exit(1)
+		}
+	case "createUpdateFile":
+		if len(extraArgs) > 0 {
+			for i, s := range extraArgs {
+				data := strings.Split(s, ":")
+				pid, ref, path, content := data[0], data[1], data[2], data[3]
+				a.createUpdateFile(pid, ref, path, content)
 				fmt.Println(i, pid, ref, path, content)
 			}
 		} else {
